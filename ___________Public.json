@@ -1,0 +1,458 @@
+{
+  "name": "自动生成图文并发送邮箱Public",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 20
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        1740
+      ],
+      "id": "5e9f6f96-6925-46ca-8cb8-10cb83566af8",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "## 例子3：每天根据Google表格里的固定题目 生成图文 然后发送邮件给客户",
+        "height": 660,
+        "width": 2640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        1540
+      ],
+      "id": "5aeb54d4-8616-47cf-9816-fc20c29ffd59",
+      "name": "Sticky Note19"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1e9cYLVq70PbTlgw1IPej7CCavOVHSpWYVSfWZAmwpLc",
+          "mode": "list",
+          "cachedResultName": "Newsletter Topics",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e9cYLVq70PbTlgw1IPej7CCavOVHSpWYVSfWZAmwpLc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e9cYLVq70PbTlgw1IPej7CCavOVHSpWYVSfWZAmwpLc/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Published?",
+              "lookupValue": "NO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        1740
+      ],
+      "id": "471cb133-483a-4b3d-b6fa-16519caac7f5",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Xj0fy10R0r0YBGcA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        440,
+        1740
+      ],
+      "id": "d451f09e-f0c2-4937-a89e-9e91a5520d5d",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1e9cYLVq70PbTlgw1IPej7CCavOVHSpWYVSfWZAmwpLc",
+          "mode": "list",
+          "cachedResultName": "Newsletter Topics",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e9cYLVq70PbTlgw1IPej7CCavOVHSpWYVSfWZAmwpLc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1e9cYLVq70PbTlgw1IPej7CCavOVHSpWYVSfWZAmwpLc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Newsletter Topics": "={{ $json['Newsletter Topics'] }}",
+            "Published?": "YES",
+            "Published at": "={{ $('Schedule Trigger').item.json['Readable date'] }}"
+          },
+          "matchingColumns": [
+            "Newsletter Topics"
+          ],
+          "schema": [
+            {
+              "id": "Newsletter Topics",
+              "displayName": "Newsletter Topics",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Published?",
+              "displayName": "Published?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Published at",
+              "displayName": "Published at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        660,
+        1740
+      ],
+      "id": "90062b67-c61e-4661-8b6d-6599b9ab8469",
+      "name": "Google Sheets2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Xj0fy10R0r0YBGcA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=1. 帮我以这个{{ $json['Newsletter Topics'] }}为主题一个文章，要求英文。\n2. 帮我以这个{{ $json['Newsletter Topics'] }}写AI图片生成的提示词，要求英文，目标是制作一个带有图标和数据的图片。",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        880,
+        1740
+      ],
+      "id": "f17d5d38-4483-4305-988d-137f50ed7524",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        840,
+        1940
+      ],
+      "id": "0a629333-c980-49ec-9749-1c45369638d2",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "tHC6Dtlocib5h4Zq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"文章\": \"\",\n\t\"图片提示词\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        1940
+      ],
+      "id": "3349c2bc-1b96-48a8-9864-2184a3dfefce",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer [Your OpenAI API key]"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"model\": \"gpt-image-1\",\n    \"prompt\": \"{{ $json.output['图片提示词'] }}\",\n    \"n\": 1,\n    \"size\": \"1024x1024\"\n  } ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        1740
+      ],
+      "id": "e064d80d-03da-423e-8b83-b7e50412ecf6",
+      "name": "GPT IMAGE GEN"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1500,
+        1740
+      ],
+      "id": "c25646ad-4699-487c-8313-4cc138967d2e",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "sendTo": "=",
+        "subject": "={{ $('Limit').item.json['Newsletter Topics'] }}",
+        "message": "=<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title></title>\n    <style>\n        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');\n        \n        body {\n            font-family: 'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;\n            line-height: 1.8;\n            color: #333;\n            max-width: 700px;\n            margin: 0 auto;\n            padding: 25px;\n            background-color: #f5f7fa;\n        }\n        \n        .email-container {\n            background-color: #ffffff;\n            border-radius: 12px;\n            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);\n            overflow: hidden;\n        }\n        \n        .top-accent {\n            height: 6px;\n            background: linear-gradient(90deg, #3498db, #9b59b6, #e74c3c);\n        }\n        \n        .header {\n            padding: 35px 40px 25px;\n            text-align: center;\n            background-color: #fcfcfc;\n            position: relative;\n        }\n        \n        .header::after {\n            content: \"\";\n            position: absolute;\n            bottom: 0;\n            left: 15%;\n            right: 15%;\n            height: 1px;\n            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);\n        }\n        \n        .brand-name {\n            font-size: 24px;\n            font-weight: 700;\n            color: #3498db;\n            letter-spacing: 1px;\n            margin-bottom: 15px;\n            text-transform: uppercase;\n        }\n        \n        h1 {\n            color: #2c3e50;\n            font-weight: 600;\n            margin-top: 0;\n            margin-bottom: 10px;\n            font-size: 28px;\n            letter-spacing: -0.5px;\n        }\n        \n        .date {\n            display: inline-block;\n            color: #7f8c8d;\n            font-size: 14px;\n            margin: 0;\n            padding: 5px 15px;\n            border-radius: 20px;\n            background-color: #f8f9fa;\n        }\n        \n        .content {\n            padding: 40px;\n            font-size: 16px;\n            color: #3a4a5a;\n        }\n        \n        .content p {\n            margin-bottom: 20px;\n            line-height: 1.8;\n        }\n        \n        .content p:first-of-type::first-letter {\n            font-size: 300%;\n            font-weight: 700;\n            float: left;\n            padding: 0 8px 0 0;\n            color: #3498db;\n            line-height: 0.8;\n        }\n        \n        .content h2 {\n            color: #2c3e50;\n            font-size: 22px;\n            margin-top: 35px;\n            margin-bottom: 15px;\n            padding-bottom: 8px;\n            border-bottom: 2px solid #f0f4f8;\n        }\n        \n        .content a {\n            color: #3498db;\n            text-decoration: none;\n            border-bottom: 1px dotted #3498db;\n            transition: all 0.2s ease;\n        }\n        \n        .content a:hover {\n            color: #2980b9;\n            border-bottom-color: #2980b9;\n        }\n        \n        .quote {\n            border-left: 4px solid #3498db;\n            padding: 15px 20px;\n            margin: 25px 0;\n            background-color: #f8f9fa;\n            font-style: italic;\n            color: #34495e;\n        }\n        \n        .footer {\n            background-color: #f8fafc;\n            padding: 30px 40px;\n            text-align: center;\n            font-size: 14px;\n            color: #95a5a6;\n            border-top: 1px solid #eef2f7;\n        }\n        \n        .social-links {\n            margin: 25px 0;\n        }\n        \n        .social-button {\n            display: inline-block;\n            width: 36px;\n            height: 36px;\n            background-color: #f1f5f9;\n            border-radius: 50%;\n            color: #3498db;\n            line-height: 36px;\n            text-align: center;\n            margin: 0 8px;\n            text-decoration: none;\n            font-weight: bold;\n            box-shadow: 0 2px 5px rgba(0,0,0,0.05);\n            transition: transform 0.3s ease, background-color 0.3s ease;\n        }\n        \n        .social-button:hover {\n            transform: translateY(-3px);\n            background-color: #e6f0f9;\n        }\n        \n        .button {\n            display: inline-block;\n            background: linear-gradient(135deg, #3498db, #2980b9);\n            color: white;\n            text-decoration: none;\n            padding: 12px 28px;\n            border-radius: 6px;\n            margin-top: 25px;\n            font-weight: 500;\n            letter-spacing: 0.5px;\n            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);\n            transition: all 0.3s ease;\n        }\n        \n        .button:hover {\n            transform: translateY(-2px);\n            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);\n            background: linear-gradient(135deg, #3498db, #1c6ea4);\n        }\n        \n        .divider {\n            height: 1px;\n            margin: 20px 0;\n            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);\n        }\n        \n        .company-signature {\n            font-weight: 600;\n            color: #3498db;\n            letter-spacing: 1px;\n            margin: 20px 0 10px;\n        }\n        \n        @media only screen and (max-width: 600px) {\n            body {\n                padding: 15px;\n            }\n            .header, .content, .footer {\n                padding: 25px 20px;\n            }\n            h1 {\n                font-size: 24px;\n            }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"email-container\">\n        <div class=\"top-accent\"></div>\n        <div class=\"header\">\n            <div class=\"brand-name\">每日热点</div>\n            <h1></h1>\n            <p class=\"date\">{{ new Date().toLocaleDateString('zh-CN', {year: 'numeric', month: 'long', day: 'numeric'}) }}</p>\n        </div>\n        \n        <div class=\"content\">\n            {{ $('AI Agent1').item.json.output['文章'] }}\n            \n            <div class=\"quote\">\n                阅读是一座随身携带的避难所，一盏点亮思想的明灯。\n            </div>\n            \n            <a href=\"#\" class=\"button\">阅读更多精彩内容</a>\n        </div>\n        \n        <div class=\"footer\">\n            <div class=\"social-links\">\n                <a href=\"#\" class=\"social-button\">微</a>\n                <a href=\"#\" class=\"social-button\">博</a>\n                <a href=\"#\" class=\"social-button\">知</a>\n                <a href=\"#\" class=\"social-button\">豆</a>\n            </div>\n            \n            <div class=\"divider\"></div>\n            \n            <div class=\"company-signature\">您的品牌名称</div>\n            <p>感谢您的阅读与支持！如果喜欢我们的内容，欢迎分享给更多朋友。</p>\n            <p>如需退订此类邮件，请<a href=\"#\" style=\"color:#95a5a6;text-decoration:underline;\">点击这里</a></p>\n            <p>© 2025 您的品牌. 保留所有权利.</p>\n        </div>\n    </div>\n</body>\n</html>",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1720,
+        1740
+      ],
+      "id": "44a51a72-2c26-4a3b-a53d-6e7bad3d7271",
+      "name": "Gmail2",
+      "webhookId": "17349807-4a3b-43ce-beaf-19acf60af343",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NheXOwaeH2MAWUTP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### 填入你的OpenAI Api key",
+        "height": 240,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        1680
+      ],
+      "id": "e6a5a162-8a1d-4caf-9276-1b9bcb464efc",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### 填入要发送的邮箱",
+        "height": 240,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        1680
+      ],
+      "id": "d18c0a3c-6858-4316-9585-1fcd0fd0db41",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {
+    "AI Agent1": [
+      {
+        "json": {
+          "output": {
+            "文章": "### How to Use AI Agents for Acquiring Leads\n\nIn today’s competitive market, acquiring leads is crucial for business growth. AI agents can significantly enhance this process by automating tasks, analyzing data, and engaging potential customers. Here’s how you can effectively use AI agents for lead acquisition.\n\n#### 1. Understanding AI Agents\nAI agents are systems designed to perform tasks that usually require human intelligence. They can interact with users, learn from interactions, and perform data analysis.\n\n#### 2. Automating Initial Interactions\nOne of the primary ways to utilize AI agents is in automating initial interactions with potential leads. Chatbots, for example, can answer common questions, qualify leads, and gather information without the need for human intervention. This not only saves time but also ensures that potential customers receive immediate assistance.\n\n#### 3. Data Analysis\nAI agents can analyze vast amounts of data more quickly than a human can. By utilizing machine learning algorithms, they can identify patterns in customer behavior, preferences, and demographics, enabling businesses to tailor their marketing strategies effectively. This targeted approach can significantly increase lead conversion rates.\n\n#### 4. Personalization\nAI agents can help create personalized experiences for leads. By analyzing past interactions and preferences, AI can suggest products or services that are most relevant to a potential customer, improving engagement and increasing the likelihood of conversion.\n\n#### 5. Follow-up Automation\nFollowing up with leads is essential, and AI can help automate this process as well. AI agents can send personalized follow-up emails or messages to leads who have shown interest, providing them with more information and nudging them further down the sales funnel.\n\n#### 6. Integrating with CRM Systems\nIntegrating AI agents with Customer Relationship Management (CRM) systems allows businesses to consolidate information about leads, track interactions, and analyze engagement over time. This integration helps in building comprehensive lead profiles that can assist sales teams in their outreach efforts.\n\n#### Conclusion\nUsing AI agents for acquiring leads can transform the way businesses interact with potential customers. By automating processes, analyzing data, and providing personalized experiences, AI can help businesses not only acquire leads efficiently but also nurture them through the sales process. Adopting AI technology is no longer optional but a necessity for staying competitive in today’s market.",
+            "图片提示词": "An infographic illustrating the benefits of using AI agents for lead acquisition, featuring icons representing automation, data analysis, personalization, and follow-up. Include graphs showing increased lead conversions and customer engagement. Use a modern, professional design."
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "GPT IMAGE GEN",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT IMAGE GEN": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Gmail2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c9fedecb-a356-46b9-a6c4-cf8db3e56fe4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f638a47e4e563f91fde8b98ed9f5fa6a9faa41a207143e9ce05d85200c905524"
+  },
+  "id": "eC2dl0B3NzBxxRUB",
+  "tags": []
+}

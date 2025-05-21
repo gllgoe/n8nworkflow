@@ -1,0 +1,1570 @@
+{
+  "name": "MyAIAgentTeam:Email,Meeting,WebSearch,Notion,Tweet,RAG_PUBLIC",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -420,
+        -300
+      ],
+      "id": "1321c496-d6f9-4848-90da-e4f1daca28ba",
+      "name": "Telegram Trigger",
+      "webhookId": "da8c5455-df8f-46a2-80cb-83c72c7dcc9f",
+      "credentials": {
+        "telegramApi": {
+          "id": "LfQnSJm0YtyRS6XG",
+          "name": "X Cypto Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ce8a5cfa-77d6-4d08-8144-d2dfbbdc3487",
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "03873863-ba61-4951-a823-5c8438c8d693",
+                    "leftValue": "={{ $json.message.photo }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "photo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -180,
+        -300
+      ],
+      "id": "8dba26e5-c046-43c5-a531-16e1dfc4e46e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        320,
+        -300
+      ],
+      "id": "bb5e6ef2-b4a3-48d3-8ec0-a25ca4c73880",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "tHC6Dtlocib5h4Zq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "Extraact the information from image",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        140,
+        0
+      ],
+      "id": "714edd4b-c000-4fff-9bf2-8e977ff5c131",
+      "name": "OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "tHC6Dtlocib5h4Zq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content }}\n",
+        "options": {
+          "systemMessage": "=You are a unified AI Agent system composed of specialized assistants working collaboratively to manage all aspects of the user's personal affairs. You operate professionally, proactively, and accurately, leveraging designated tools to handle tasks related to email, calendar, blog writing, and contact management.\n\n# Email Management Assistant\nYou are responsible for managing the user's email communications with professionalism and efficiency. All emails must be formatted in HTML.\n\n## Tasks & Tools:\n- Send Email: Send professionally formatted emails.\n- Create Draft: Create draft emails when requested.\n- Get Emails: Retrieve inbox emails to read, mark, reply, or label.\n- Get Labels: Retrieve available labels.\n- Mark Unread: Mark an email as unread (requires message ID from \"Get Emails\").\n- Label Email: Label an email (requires message ID from \"Get Emails\" and label ID from \"Get Labels\").\n- Email Reply: Reply to a specific email (requires message ID from \"Get Emails\").\n\nFormatting: Always use HTML email formatting. Close all emails with:\n\nBest,\nMuzi\n\n# Calendar Management Assistant\nYou manage the user’s calendar, ensuring meetings, events, and time blocks are scheduled, updated, or deleted appropriately.\n\n## Tasks & Tools:\n- Create Event: Schedule a personal/solo event.\n- Create Event with Attendee: Schedule an event with participants.\n- Get Events: Fetch the calendar schedule.\n- Delete Event: Delete a calendar event (requires event ID from \"Get Events\").\n- Update Event: Update event details (requires event ID from \"Get Events\").\n\nIf no event duration is specified, assume 1 hour.\nUse the current datetime: {{ $now }} as a reference for scheduling.\n\n# Content Writing Assistant\nYou are an expert Content writer skilled in creating viral posts for X(twitter), Xiaohongshu and medium. \n\n## Tasks & Tools:\n- Tavily Search Tool: Research topics to ensure content is up-to-date and well-cited.\nProvide factual accuracy with proper citations (all links from Tavily must be clickable).\n\n\n# Contact Assistant\nYou handle the user’s contact book by retrieving, updating, or adding new contacts as needed.\n\n## Tasks & Tools:\n- Get Contacts: Search for contact information.\n- Add Contact: Add new contact data.\n\n# Pinecone Vector Store tool\nIt is used to query the knowledge in your vector database. If client asks a question, search both in the vector store as well as search the internet for the answer.\n\n# Take notes in Notion\nIt is used to note down all the konwledge in notion. \n\n#  WebSearch tool\nIt is used to search for information online.\n\n# Post to X tool\nThis X tool allows us to post on X.\n\n# Operational Protocol\nUse tools in the correct sequence (e.g., fetch message/event/contact IDs before acting).\n\n# Use the \"Think\" tool in the following situations:\n1. If there is an issue, use think tool to figure out if you are using the wrong tool or forget to use the tool. Resolve it by retrying again or using the correct tool.\n2. If a task is done, use think tool to make sure that all the requests are truly completed.\n\nUse {{ $now }} for any time-sensitive tasks or references.\n\n\n# Example1:\nUser Request:\n\"Book a meeting with 小李 at 5pm and then Send an email to 小李 about to ask if it is ok for him. Also, label it as 'Work.'\"\n\nAgent Workflow:\n\n1. Get Contact\n→ Look up 小李 email address.\n\n2. Create event \n→ book a meeting with 小李 using the correct email address at 5pm.\n\n3.Send Email\n→ Use 小李’s email address to send a new email with the following HTML body:\n\n<p>Hi,</p>\n<p>下午5点开个会，时间合适吗？</p>\n<p>木子</p>\n\n4. Get Labels\n→ Retrieve available labels to get the label ID for \"Finance.\"\n\n5.Label Email\n→ Use the message ID and label ID to apply the \"work\" label to the email that just sent to 小李.\n\n6.Use \"Think\" tool to check if all the tasks are well completed. If yes, respond to the user with the same language as the user's query.\n\n# Example2:\nUser Request:\n\"What is XXX?\"\n\nAgent Workflow:\n\n1. Pinecone Vector Store \n→ Look up in Vector Database if the answer can be found there. If yes then return the search result.\n\n2. Tavily WebSearch\n→ If the result cannot be found in Pinecone Vector Store, search the answer on the internet using \"Tavily WebSearch\" tool.\n\n\n3.Use \"Think\" tool to check if all the tasks are well completed. If yes, respond to the user with the same language as the user's query."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        900,
+        -300
+      ],
+      "id": "aeba0720-6018-447b-a837-268ecdfda8e4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2020,
+        -300
+      ],
+      "id": "0c9dd0e1-e02e-4516-9e1c-9265fdaeb1fb",
+      "name": "Telegram",
+      "webhookId": "1cf67026-6651-4383-bd73-add6a9a23a48",
+      "credentials": {
+        "telegramApi": {
+          "id": "LfQnSJm0YtyRS6XG",
+          "name": "X Cypto Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "07ae3eac-ab9d-4e43-9463-6de9f890173f",
+              "name": "content",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        -300
+      ],
+      "id": "6901ad71-e1b9-4398-80a3-9529c25fb3b3",
+      "name": "Edit Fields_Audio"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "07ae3eac-ab9d-4e43-9463-6de9f890173f",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        0
+      ],
+      "id": "6d256ada-bee3-4b04-b353-18598addd3df",
+      "name": "Edit Fields_Image"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "07ae3eac-ab9d-4e43-9463-6de9f890173f",
+              "name": "content",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        -560
+      ],
+      "id": "564a7622-a9cf-4ca3-9771-3f491db51223",
+      "name": "Edit Fields_Text"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "AIAgentpapers",
+        "toolDescription": "Extract useful information from the Pinecone vector store.",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "aipapers",
+          "mode": "list",
+          "cachedResultName": "aipapers"
+        },
+        "options": {
+          "pineconeNamespace": "Anthropic"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1,
+      "position": [
+        2920,
+        520
+      ],
+      "id": "c845c087-90c7-46e4-bbda-f950cd296b54",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "knLyD37plG0jZr9U",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2920,
+        660
+      ],
+      "id": "cc5b804a-69ba-4f43-9066-bd1f0cf0b2b3",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "tHC6Dtlocib5h4Zq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Trigger upon receiving a message, audio, or image.",
+        "height": 260,
+        "width": 220
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -400
+      ],
+      "id": "1596ff83-3fe9-4900-ad2c-8eb5ca51dd8f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "66666",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        960,
+        60
+      ],
+      "id": "0eead02f-a3d4-4ac3-8b63-fa025190e366",
+      "name": "Window Buffer Memory"
+    },
+    {
+      "parameters": {
+        "content": "### Route differently based on receiving an image, audio, or text.",
+        "height": 260,
+        "width": 220,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -400
+      ],
+      "id": "3394bbbf-ac4a-4f9a-9336-9c5f1812f3ee",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "### Set the 'content' field based on the received input",
+        "height": 260,
+        "width": 220,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        460,
+        -660
+      ],
+      "id": "4dd520eb-5c35-4091-890b-e15538f5c3d2",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "### Set the 'content' field based on the received input",
+        "height": 240,
+        "width": 220,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        460,
+        -380
+      ],
+      "id": "8270fa9f-5868-48d2-a5ac-09a59cececb2",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "### Set the 'content' field based on the received input",
+        "height": 240,
+        "width": 220,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        460,
+        -80
+      ],
+      "id": "cadcb52a-8a4c-41dd-9414-e46a07c7e500",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "### Transcribe audio to text.",
+        "height": 240,
+        "width": 340,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        100,
+        -380
+      ],
+      "id": "c16f77b5-4906-482f-baf6-e816df229341",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "### Extract information from an image.",
+        "height": 240,
+        "width": 340,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        100,
+        -80
+      ],
+      "id": "a589b921-3446-4713-975f-309c93b54b2e",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "###  AI Agent node\n\nAI Agent node acts as a unified AI system of specialized assistants designed to manage a user's personal affairs. It operates proactively and accurately, using designated tools to handle tasks across email, calendar, content writing, and contact management.\n\nSummary of the assistant specializations:\n\n- Email Management Assistant: Manages email communications, including sending, replying, drafting, labeling, and retrieving emails, with HTML formatting.\n- Calendar Management Assistant: Handles calendar scheduling, including creating, updating, deleting events, and managing attendees.\n- Content Writing Assistant: Creates content for platforms like X, Xiaohongshu and Medium, using the Tavily Search Tool for research and citations.\n- Contact Assistant: Manages the user's contact book by retrieving and adding contact information.\n- Pinecone Vector Store tool: Query the knowledge in your vector database.\n- Take notes in Notion: Note down all the knowledge in notion.\n- WebSearch tool: Allows the agent to search for information online.\n- Post to X tool: Enables the agent to publish posts on the X platform.",
+        "height": 520,
+        "width": 1040,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        780,
+        -660
+      ],
+      "id": "1cac11a9-a2cf-431b-9d79-4fe36fd86d3b",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "### Vector Database Tool\nSearch for relevant knowledge in the vector database.",
+        "height": 380,
+        "width": 340,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2880,
+        420
+      ],
+      "id": "e8e45470-39b0-440d-b6ab-4f27b613ef38",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "### Reply to user",
+        "height": 200,
+        "width": 340,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        -340
+      ],
+      "id": "d5695168-5c0e-4ed0-aa01-5ab531d10835",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "### Store short time memory",
+        "height": 280,
+        "width": 200,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        900,
+        -20
+      ],
+      "id": "72f31b34-2731-4c1a-9116-b321559d3713",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        140,
+        -300
+      ],
+      "id": "0e316d8d-7085-42ca-902c-410fc73d00af",
+      "name": "DownloadAudio",
+      "webhookId": "91366374-b929-4571-b3b9-c247e26f44bf",
+      "credentials": {
+        "telegramApi": {
+          "id": "LfQnSJm0YtyRS6XG",
+          "name": "X Cypto Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Ultimate AI Personal Assistant: Capable of Handling Email, Meetings, Web Search, Notion, Posting to X, and RAG\n### This AI Agent team handles the majority of daily work for you\nEmail: tianyi.datascience@gmail.com\nLinks:\n- Google cloud console: https://console.cloud.google.com/\n- Tavily: https://firecrawl.link/Tianyi\n- Pinecone: https://www.pinecone.io/\n",
+        "height": 280,
+        "width": 1160,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        -1220
+      ],
+      "id": "940e0073-eeb2-4ba5-98e2-4912e1ab67eb",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "description": "1. If there is an issue, figure out if you are using the wrong tool or forget to use the tool. Resolve it by retrying again or using the correct tool.\n2. If a task is done, make sure that all the requests are truly completed."
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        3400,
+        640
+      ],
+      "id": "bdc52072-069e-46a5-921d-998fa09cfbca",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -440,
+        520
+      ],
+      "id": "ceedab35-e0eb-4bf8-8481-0ea783375c48",
+      "name": "Send Email",
+      "webhookId": "63b5fba3-018f-4d5c-a807-fdda7a3003bb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NheXOwaeH2MAWUTP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": "={{ $fromAI(\"limit\",\"how many emails the user wants\") }}",
+        "simple": false,
+        "filters": {
+          "sender": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sender', `who the emails are from`, 'string') }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        40,
+        520
+      ],
+      "id": "26377cf7-6a54-4577-b8b8-23d8a649ae66",
+      "name": "Get Emails",
+      "webhookId": "63190dc7-39a7-48f0-9472-529d906684ac",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NheXOwaeH2MAWUTP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "html",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To_Email', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        520
+      ],
+      "id": "3f34843b-65af-41cc-afe2-9873c007fb4f",
+      "name": "Create Draft",
+      "webhookId": "3f6a5be6-b10e-44c5-b236-df5cac738859",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NheXOwaeH2MAWUTP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', `the message ID`, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -320,
+        520
+      ],
+      "id": "bdaa94a7-12d7-4603-91b7-fc0ada366229",
+      "name": "Email Reply",
+      "webhookId": "5134751d-d300-43cf-984c-3821b6336ed1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NheXOwaeH2MAWUTP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        160,
+        520
+      ],
+      "id": "423b1189-de27-4761-9bca-193f017f0adc",
+      "name": "Get Labels",
+      "webhookId": "844ef4cd-6169-41d9-adb6-ae39058dc4f6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NheXOwaeH2MAWUTP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', `the ID of the message`, 'string') }}",
+        "labelIds": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Label_Names_or_IDs', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -200,
+        520
+      ],
+      "id": "bc55fac9-007c-4240-8c8d-a33a0c183116",
+      "name": "Label Emails",
+      "webhookId": "0947aa2b-6fe0-4114-bba6-719d9b5be49d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NheXOwaeH2MAWUTP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "tianyi.datascience@gmail.com",
+          "mode": "list",
+          "cachedResultName": "tianyi.datascience@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees0_Attendees', ``, 'string') }}"
+          ],
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1600,
+        520
+      ],
+      "id": "13dc9bfc-8245-47a6-80fc-43895a080649",
+      "name": "Create Event with Attendee",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "GIcT0lbHI750HiAx",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "tianyi.datascience@gmail.com",
+          "mode": "list",
+          "cachedResultName": "tianyi.datascience@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "attendees": [],
+          "summary": "={{ $fromAI(\"eventTitle\") }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1460,
+        520
+      ],
+      "id": "4f210b5c-695e-46e1-80c5-e2211c397db1",
+      "name": "Create Event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "GIcT0lbHI750HiAx",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "tianyi.datascience@gmail.com",
+          "mode": "list",
+          "cachedResultName": "tianyi.datascience@gmail.com"
+        },
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', `the day before the date the user requested`, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', `the day after the date the user requested`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1320,
+        520
+      ],
+      "id": "49b35ba2-c30e-41bf-8ae0-46f3d396bcd7",
+      "name": "Get Events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "GIcT0lbHI750HiAx",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "tianyi.datascience@gmail.com",
+          "mode": "list",
+          "cachedResultName": "tianyi.datascience@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1180,
+        520
+      ],
+      "id": "70124ef7-4764-488b-b78c-e411c8902c04",
+      "name": "Delete Event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "GIcT0lbHI750HiAx",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "tianyi.datascience@gmail.com",
+          "mode": "list",
+          "cachedResultName": "tianyi.datascience@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {
+          "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+          "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        520
+      ],
+      "id": "c6e87c93-a51b-4fa0-a3e2-c33751c5b029",
+      "name": "Update Event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "GIcT0lbHI750HiAx",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1h8lX-nyr2Ej3sAr9hdEKg8cX1tm8RoDn4wWSEIX5Zes",
+          "mode": "list",
+          "cachedResultName": "Contact",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h8lX-nyr2Ej3sAr9hdEKg8cX1tm8RoDn4wWSEIX5Zes/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Work",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h8lX-nyr2Ej3sAr9hdEKg8cX1tm8RoDn4wWSEIX5Zes/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        500,
+        520
+      ],
+      "id": "1003ec9d-3ebf-4a17-b9b4-1fbe207e2428",
+      "name": "Get Contact",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Xj0fy10R0r0YBGcA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1h8lX-nyr2Ej3sAr9hdEKg8cX1tm8RoDn4wWSEIX5Zes",
+          "mode": "list",
+          "cachedResultName": "Contact",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h8lX-nyr2Ej3sAr9hdEKg8cX1tm8RoDn4wWSEIX5Zes/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Work",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h8lX-nyr2Ej3sAr9hdEKg8cX1tm8RoDn4wWSEIX5Zes/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Name', ``, 'string') }}",
+            "Email Address": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email_Address', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        660,
+        520
+      ],
+      "id": "db0ab4fb-fe76-4be2-9904-c84724adb017",
+      "name": "Add Contact",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Xj0fy10R0r0YBGcA",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to search the internet",
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"api_key\": \"YourTavilyAPIKey\",\n    \"query\": \"{SearchTerm}\",\n    \"search_depth\": \"basic\",\n    \"include_answer\": true,\n    \"topic\": \"news\",\n    \"include_raw_content\": true,\n    \"max_results\": 3\n} ",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "SearchTerm",
+              "description": "What the user has requested to search",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2300,
+        540
+      ],
+      "id": "3c6e8e86-c5bf-4434-8621-deb2066b0872",
+      "name": "Tavily WebSearch"
+    },
+    {
+      "parameters": {
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Text', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.twitterTool",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        540
+      ],
+      "id": "2033cd1a-fd72-46aa-b3ca-061bb8f434d3",
+      "name": "Post to X",
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "5OflWGMqg7Q0JdZi",
+          "name": "X account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "1db7fe2c-b09f-807a-9c0d-c40cc759896e",
+          "mode": "list",
+          "cachedResultName": "Personal Notes",
+          "cachedResultUrl": "https://www.notion.so/1db7fe2cb09f807a9c0dc40cc759896e"
+        },
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', ``, 'string') }}",
+        "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', ``, 'boolean') }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Information|rich_text",
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('propertyValues0_text0_Text', ``, 'string') }}",
+                    "isLink": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('propertyValues0_text0_Is_Link', ``, 'boolean') }}",
+                    "annotationUi": {}
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 2.2,
+      "position": [
+        1940,
+        540
+      ],
+      "id": "ac066edd-796b-459a-9f49-aa5e549bae1b",
+      "name": "Take notes in Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "cg3olcUEgC1kLEfv",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        40
+      ],
+      "id": "be889af3-5774-46d5-b40b-07d99f9c4637",
+      "name": "GPT",
+      "credentials": {
+        "openAiApi": {
+          "id": "tHC6Dtlocib5h4Zq",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Email Tools\nThese email tools allow us to send emails, reply to emails, flag emails, create drafts, receive emails, and label emails.",
+        "height": 260,
+        "width": 840,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        420
+      ],
+      "id": "5c82ad48-3db2-4f64-ad32-94bb83cc1d36",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "### Contact Tools\nThese contact tools allow us to get the contact information (email) of our contacts and add new contacts.",
+        "height": 260,
+        "width": 520,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        420
+      ],
+      "id": "6061aa4e-67db-4788-a789-2de055bdd7f1",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "content": "### Calendar Tools\nThese calendar tools allow us to schedule meetings, invite participants to meetings, delete meetings, get our schedule, and update our schedule.",
+        "height": 260,
+        "width": 800,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        980,
+        420
+      ],
+      "id": "a51ee294-0f24-4b18-a995-bf0b008b0d3f",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "content": "### Notion Tool\nThis Notion tool allows us to record notes into our Notion database.",
+        "height": 260,
+        "width": 300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        420
+      ],
+      "id": "a3169f3b-04ad-42a8-8a2e-9449c4aa2ca3",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "content": "### WebSearch Tool\nThis Tavily WebSearch tool allows us to search for information online.",
+        "height": 260,
+        "width": 300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2200,
+        420
+      ],
+      "id": "602f0e39-5d52-47a3-970b-468f20f0c3c2",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "content": "### Post to X Tool\nThis X tool allows us to post on X.",
+        "height": 260,
+        "width": 300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2540,
+        420
+      ],
+      "id": "b656529f-5251-43e2-8292-75dfe2382e90",
+      "name": "Sticky Note18"
+    },
+    {
+      "parameters": {
+        "content": "### Think Tool\nThis tool helps ensure tasks are completed correctly by first checking for tool-related errors (using the wrong tool or forgetting to use one) and prompting a retry with the right approach. Secondly, it verifies the thorough completion of all user requests once a task is finished, by noting down the thinking logs.",
+        "height": 380,
+        "width": 340,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3260,
+        420
+      ],
+      "id": "3593f2fc-fd87-4001-91b5-ded8bba1e1be",
+      "name": "Sticky Note19"
+    },
+    {
+      "parameters": {
+        "content": "## Functionalities\n**This n8n workflow acts as an AI-powered personal assistant accessible via Telegram. It processes user requests involving email management, calendar scheduling, contact management, and information retrieval. The workflow can handle text, audio, and image inputs from Telegram, utilizing AI to understand the request and then employing various tools (Gmail, Google Calendar, Google Sheets, OpenAI, Pinecone) to fulfill it. It also incorporates a \"Think\" tool to ensure proper tool usage and task completion, and has memory capabilities.**\n\n### Key Functionalities:\n\n- Telegram Trigger: Receives user requests via Telegram messages (text, audio, or images).\n- Input Handling:\nRoutes the workflow based on the type of input (text, audio, or photo).\n- AI Agent:\nUses a AI Agent to interpret user requests and orchestrate the use of various tools.\nIs designed to manage email, calendar, contacts, and perform web searches.\nIncludes memory capabilities using the Window Buffer Memory node.\n- Tools:\n-- Gmail Tools: Send emails, get emails, create drafts, reply to emails, get labels, and label emails.\n-- Google Calendar Tools: Create events (with or without attendees), get events, delete events, and update events.\n-- Google Sheets Tools: Get contact information and add new contacts.\n-- Pinecone Vector Store: Queries a vector database for information retrieval (RAG).\n-- Tavily WebSearch (Implicit in AI Agent description): Searches for information online.\n-- Post to X (Implicit in AI Agent description): Enables posting to X.\n-- Think Tool: Ensures correct tool usage and verifies task completion.\n- Output: Sends the AI Agent's response back to the user via Telegram.",
+        "height": 500,
+        "width": 2360,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        -940
+      ],
+      "id": "2bf8c254-ae2d-426d-acff-0a3555564b9b",
+      "name": "Sticky Note17"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields_Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DownloadAudio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields_Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields_Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields_Audio": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields_Image": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields_Text": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DownloadAudio": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Reply": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Emails": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Draft": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Labels": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Label Emails": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Event with Attendee": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Events": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Contact": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily WebSearch": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to X": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Take notes in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Paris",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "7e3b09f2-eda9-4c56-8bbf-e1b9398f9631",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f638a47e4e563f91fde8b98ed9f5fa6a9faa41a207143e9ce05d85200c905524"
+  },
+  "id": "MMiaDhUfsB5mqTY7",
+  "tags": [
+    {
+      "createdAt": "2025-01-26T15:21:53.716Z",
+      "updatedAt": "2025-01-26T15:21:53.716Z",
+      "id": "W7eaE1NVqTisi5k2",
+      "name": "RAG"
+    }
+  ]
+}
